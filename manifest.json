@@ -1,0 +1,23 @@
+{
+	"manifest_version": 2,
+	"name": "Add Subtitles",
+	"version": "1.0",
+	"description": "Add subtitles to a video element.",
+    "icons": {
+        "48": "icons/icon-48.png"
+    },
+    "permissions": [
+        "activeTab"
+    ],
+    "browser_action": {
+        "default_icon": "icons/icon-32.png",
+        "default_title": "Add Subtitles",
+        "default_popup": "popup/popup.html"
+    },
+    "content_scripts": [
+        {
+            "matches": ["<all_urls>"],
+            "js": ["add_subtitles.js"]
+        }
+    ]
+}

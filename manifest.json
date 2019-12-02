@@ -4,20 +4,17 @@
 	"version": "1.0",
 	"description": "Add subtitles to a video element.",
     "icons": {
-        "48": "icons/icon-48.png"
+        "48": "icons/icon-48.png",
+        "96": "icons/icon-96.png"
     },
     "permissions": [
         "activeTab"
     ],
+    "background": {
+        "scripts": ["background_script.js"]
+    },
     "browser_action": {
         "default_icon": "icons/icon-32.png",
-        "default_title": "Add Subtitles",
-        "default_popup": "popup/popup.html"
-    },
-    "content_scripts": [
-        {
-            "matches": ["<all_urls>"],
-            "js": ["add_subtitles.js"]
-        }
-    ]
+        "default_title": "Add Subtitles"
+    }
 }

@@ -2,84 +2,14 @@
 <html>
 <head>
     <meta charset="utf-8">
-	<title></title>
-    <style>
-        #subtitle{
-            font-family: sans-serif;
-            font-size: 26px;
-            color: white;
-            text-shadow: 0px 0px 3px black;
-            text-align: center;
-            pointer-events: none;
-        }
-    </style>
 </head>
 <body>
-	<video width="800" controls id="video">
-		<source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-	</video>
+    <video width="800" controls id="video">
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
+    <video width="800" controls id="video">
+        <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    </video>
     <br>
-
-    <div id="subtitle"></div>
-    <input type="file" accept=".srt" id="subtitle_file_input">
-<script>
-    var video_element = document.getElementById("video");
-    var subtitle_element = document.getElementById("subtitle");
-
-    var sub_pos_top = video_element.offsetHeight+video_element.offsetTop-26;
-    subtitle_element.style.width = video_element.offsetWidth+"px";
-    subtitle_element.style.position = "absolute";
-    subtitle_element.style.top = sub_pos_top+"px";
-
-    var subtitles = [];
-
-    setInterval(function(){
-        var t = video_element.currentTime;
-        var found = -1;
-        for(var i = 0; i < subtitles.length; i++){
-            if(subtitles[i].begin <= t && subtitles[i].end >= t){
-                found = i;
-                break;
-            }
-        }
-        console.log(found);
-        if(found == -1){
-            subtitle_element.innerHTML = "";
-        }
-        else{
-            subtitle_element.innerHTML = subtitles[found].text;
-        }
-    }, 100);
-
-    function time_parse(t){
-        return parseInt(t.split(":")[0])*60+ parseInt(t.split(":")[1])*60+parseFloat(t.split(":")[2].replace(',', '.'));
-    }
-
-    function parse_subtitles(subs){
-        subs = subs.replace(/\r/g, "");
-        subs = subs.split("\n\n");
-
-        for(var i = 0; i < subs.length; i++){
-            s = subs[i].split("\n");
-            time = s[1].split(" --> ");
-            text = [];
-            for(var j = 2; j < s.length; j++){
-                text.push(s[j]);
-            }
-            subtitles.push({begin: time_parse(time[0]), end: time_parse(time[1]), text: text.join("<br>")});
-        }
-    }
-
-    document.getElementById("subtitle_file_input").addEventListener("change", function(){
-        var subtitle_file = this.files[0];
-        var file_reader = new FileReader();
-        file_reader.onload = (function(reader){
-            return function(){
-                parse_subtitles(reader.result);
-            }
-        })(file_reader);
-        file_reader.readAsText(subtitle_file);
-    });
-</script>
 </body>
 </html>

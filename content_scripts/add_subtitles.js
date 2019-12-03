@@ -99,7 +99,6 @@ var video_elements_list = document.getElementById("video_elements_list");
 
 function do_video_elements_list(){
     video_elements_list.innerHTML = "";
-    console.log("test");
     for(var i = 0; i < video_elements.length; i++){
         var v = document.createElement("div");
         v.className = "video_el";

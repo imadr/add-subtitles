@@ -7,10 +7,6 @@ if(window.has_run){
 }
 window.has_run = true;
 
-// make this switch tooltip
-// make tooltip an iframe
-// make it work in fullscreen
-
 var sub_element = document.createElement("div");
 sub_element.id = "subtitle__";
 document.body.append(sub_element);
@@ -40,9 +36,10 @@ var style = document.createElement("style");
 style.type = "text/css";
 style.innerHTML = `
 #option__{
-    font-size: inital !important;
+    color: black !important;
+    font-size: inherit;
     background-color: white !important;
-    display: inline-block !important;
+    display: inline-block;
     z-index: 99999999 !important;
     position: fixed !important;
     right: 14px !important;
@@ -51,6 +48,7 @@ style.innerHTML = `
     border: 1px solid black !important;
     padding-left: 14px !important;
     padding-right: 16px !important;
+    padding-top: 12px !important;
 }
 #option__ input{
     display: inline !important;
@@ -71,12 +69,20 @@ style.innerHTML = `
     font-family: monospace !important;
     font-size: 12px !important;
 }
+#option__ p{
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
 #subtitle_style_input{
     width: 100% !important;
     min-height: 100px !important;
 }
+#video_elements_list{
+    margin-top: 0px !important;
+}
 #video_elements_list div{
-    border: 1px solid black !important;
+    margin-top: 0px !important;
+    border: 1px solid black;
     margin-top: -1px !important;
     padding: 3px !important;
     cursor: pointer !important;
@@ -93,13 +99,13 @@ for(var i = 0; i < video_elements.length; i++){
     v.className = "video_el";
     v.innerHTML += "id: "+video_elements[i].id;
     (function(){
-        var original_outline = video_elements[i].style.outline;
+        var original_border = video_elements[i].style.border;
         var video_el = video_elements[i];
         v.addEventListener("mouseenter", function(){
-            video_el.style.outline = "4px solid red";
+            video_el.style.border = "4px solid red";
         });
         v.addEventListener("mouseleave", function(){
-            video_el.style.outline = original_outline;
+            video_el.style.border = original_border;
         });
         v.addEventListener("click", function(){
             video_element = video_el;
@@ -148,9 +154,20 @@ setInterval(function(){
     }
 }, 100);
 
+function get_offset(e){
+    var top = 0;
+    var left = 0;
+    do {
+        top += e.offsetTop || 0;
+        left += e.offsetLeft || 0;
+        e = e.offsetParent;
+    } while(e);
+    return [top, left];
+}
+
 function subtitle_pos(){
-    var sub_pos_top = video_element.offsetHeight+video_element.offsetTop+subtitle_position;
-    var sub_pos_left = video_element.offsetLeft;
+    var sub_pos_top = video_element.offsetHeight+get_offset(video_element)[0]+subtitle_position;
+    var sub_pos_left = get_offset(video_element)[1];
     subtitle_element.style.position = "absolute";
     subtitle_element.style.width = video_element.offsetWidth+"px";
     subtitle_element.style.top = sub_pos_top+"px";

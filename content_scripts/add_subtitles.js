@@ -14,6 +14,9 @@ document.body.append(sub_element);
 var menu = document.createElement("div");
 menu.id = "option__";
 menu.innerHTML = `
+<p style="margin-top: 0px;">
+    <button id="refresh_video_list">Refresh</button>
+</p>
 <p id="video_elements_list">
 </p>
 <p>
@@ -94,31 +97,40 @@ var video_elements = document.getElementsByTagName("video");
 var video_element;
 var video_elements_list = document.getElementById("video_elements_list");
 
-for(var i = 0; i < video_elements.length; i++){
-    var v = document.createElement("div");
-    v.className = "video_el";
-    v.innerHTML += "id: "+video_elements[i].id;
-    (function(){
-        var original_border = video_elements[i].style.border;
-        var video_el = video_elements[i];
-        v.addEventListener("mouseenter", function(){
-            video_el.style.border = "4px solid red";
-        });
-        v.addEventListener("mouseleave", function(){
-            video_el.style.border = original_border;
-        });
-        v.addEventListener("click", function(){
-            video_element = video_el;
-            var list = document.getElementsByClassName("video_el");
-            for(var i = 0; i < list.length; i++){
-                list[i].style.border = "";
-            }
-            this.style.border = "2px solid red";
-            subtitle_pos();
-        });
-    }());
-    video_elements_list.append(v);
+function do_video_elements_list(){
+    video_elements_list.innerHTML = "";
+    console.log("test");
+    for(var i = 0; i < video_elements.length; i++){
+        var v = document.createElement("div");
+        v.className = "video_el";
+        v.innerHTML += "id: "+video_elements[i].id;
+        (function(){
+            var original_border = video_elements[i].style.border;
+            var video_el = video_elements[i];
+            v.addEventListener("mouseenter", function(){
+                video_el.style.border = "4px solid red";
+            });
+            v.addEventListener("mouseleave", function(){
+                video_el.style.border = original_border;
+            });
+            v.addEventListener("click", function(){
+                video_element = video_el;
+                var list = document.getElementsByClassName("video_el");
+                for(var i = 0; i < list.length; i++){
+                    list[i].style.border = "";
+                }
+                this.style.border = "2px solid red";
+                subtitle_pos();
+            });
+        }());
+        video_elements_list.append(v);
+    }
 }
+
+do_video_elements_list();
+document.getElementById("refresh_video_list").addEventListener("click", function(){
+    do_video_elements_list();
+});
 
 var subtitle_element = document.getElementById("subtitle__");
 var default_style = `font-family: sans-serif;

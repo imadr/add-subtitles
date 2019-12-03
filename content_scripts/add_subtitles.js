@@ -1,6 +1,8 @@
 (function(){
 
 if(window.has_run){
+    var option_div = document.getElementById("option__");
+    option_div.style.display = option_div.style.display == "none" ? "inline-block" : "none";
     return;
 }
 window.has_run = true;
@@ -45,18 +47,29 @@ style.innerHTML = `
     position: fixed !important;
     right: 14px !important;
     bottom: 14px !important;
-    width: 400px !important;
+    width: 430px !important;
     border: 1px solid black !important;
     padding-left: 14px !important;
     padding-right: 16px !important;
 }
-#option__ input:not([type="file"]), #option__ textarea{
+#option__ input{
+    display: inline !important;
     background-color: white !important;
+    padding: initial !important;
+    margin: initial !important;
+}
+#option__ input:not([type="file"]){
+    height: 20px !important;
+}
+#option__ input:not([type="file"]), #option__ textarea{
     border: 1px solid black !important;
     box-sizing: border-box !important;
+    margin: initial !important;
+    padding: initial !important;
 }
 #option__ *{
     font-family: monospace !important;
+    font-size: 12px !important;
 }
 #subtitle_style_input{
     width: 100% !important;

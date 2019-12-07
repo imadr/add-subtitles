@@ -186,7 +186,11 @@ function subtitle_pos(){
 }
 
 function time_parse(t){
-    return parseInt(t.split(":")[0])*60+ parseInt(t.split(":")[1])*60+parseFloat(t.split(":")[2].replace(',', '.'));
+    var split = t.split(":")
+    var hours = split[0]*60*60;
+    var minutes = split[1]*60;
+    var seconds = parseFloat(t.split(":")[2].replace(',', '.'));
+    return hours+minutes+seconds;
 }
 
 function parse_subtitles(subs){

@@ -5,7 +5,15 @@ if(window.has_run){
     option_div.style.display = option_div.style.display == "none" ? "inline-block" : "none";
     return;
 }
+else{
+    if(document.getElementById("option__") != undefined){
+        document.getElementById("option__").outerHTML = "";
+        document.getElementById("subtitle__").outerHTML = "";
+    }
+}
 window.has_run = true;
+
+console.log(this.document.body);
 
 var sub_element = document.createElement("div");
 sub_element.id = "subtitle__";
@@ -90,6 +98,15 @@ style.innerHTML = `
     padding: 3px !important;
     cursor: pointer !important;
 }
+.selected_video_list{
+    border: 2px solid red !important;
+}
+.hover_video_list{
+    border: 2px solid red !important;
+}
+.hover_video_element{
+    border: 4px solid red !important;
+}
 `;
 document.getElementsByTagName("head")[0].appendChild(style);
 
@@ -104,21 +121,22 @@ function do_video_elements_list(){
         v.className = "video_el";
         v.innerHTML += "id: "+video_elements[i].id;
         (function(){
-            var original_border = video_elements[i].style.border;
             var video_el = video_elements[i];
             v.addEventListener("mouseenter", function(){
-                video_el.style.border = "4px solid red";
+                this.classList.add("hover_video_list");
+                video_el.classList.add("hover_video_element");
             });
             v.addEventListener("mouseleave", function(){
-                video_el.style.border = original_border;
+                this.classList.remove("hover_video_list");
+                video_el.classList.remove("hover_video_element");
             });
             v.addEventListener("click", function(){
                 video_element = video_el;
                 var list = document.getElementsByClassName("video_el");
                 for(var i = 0; i < list.length; i++){
-                    list[i].style.border = "";
+                    list[i].classList.remove("selected_video_list");
                 }
-                this.style.border = "2px solid red";
+                this.classList.add("selected_video_list");
                 subtitle_pos();
             });
         }());
@@ -129,6 +147,7 @@ function do_video_elements_list(){
 do_video_elements_list();
 document.getElementById("refresh_video_list").addEventListener("click", function(){
     do_video_elements_list();
+    subtitle_pos();
 });
 
 var subtitle_element = document.getElementById("subtitle__");

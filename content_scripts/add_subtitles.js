@@ -113,13 +113,23 @@ function do_video_elements_list(){
                 video_el.style.border = original_border;
             });
             v.addEventListener("click", function(){
-                video_element = video_el;
-                var list = document.getElementsByClassName("video_el");
-                for(var i = 0; i < list.length; i++){
-                    list[i].style.border = "";
+                if(video_element == video_el){
+                    video_element = undefined;
+                    var list = document.getElementsByClassName("video_el");
+                    for(var i = 0; i < list.length; i++){
+                        list[i].style.border = "";
+                    }
+                    subtitle_element.innerHTML = "";
                 }
-                this.style.border = "2px solid red";
-                subtitle_pos();
+                else{
+                    video_element = video_el;
+                    var list = document.getElementsByClassName("video_el");
+                    for(var i = 0; i < list.length; i++){
+                        list[i].style.border = "";
+                    }
+                    this.style.border = "2px solid red";
+                    subtitle_pos();
+                }
             });
         }());
         video_elements_list.append(v);

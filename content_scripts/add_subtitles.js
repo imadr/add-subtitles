@@ -119,7 +119,7 @@ function do_video_elements_list(){
     for(var i = 0; i < video_elements.length; i++){
         var v = document.createElement("div");
         v.className = "video_el";
-        v.innerHTML += "id: "+video_elements[i].id;
+        v.textContent = "id: "+video_elements[i].id;
         (function(){
             var video_el = video_elements[i];
             v.addEventListener("mouseenter", function(){
@@ -187,10 +187,10 @@ setInterval(function(){
         }
     }
     if(found == -1){
-        subtitle_element.innerHTML = "";
+        subtitle_element.textContent = "";
     }
     else{
-        subtitle_element.innerHTML = subtitles[found].text;
+        subtitle_element.textContent = subtitles[found].text;
     }
 }, 100);
 

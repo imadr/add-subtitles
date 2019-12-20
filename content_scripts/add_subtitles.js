@@ -23,6 +23,7 @@ var menu = document.createElement("div");
 menu.id = "option__";
 menu.innerHTML = `
 <p style="margin-top: 0px;">
+    List of video elements: 
     <button id="refresh_video_list">Refresh</button>
 </p>
 <p id="video_elements_list">
@@ -66,6 +67,7 @@ style.innerHTML = `
     background-color: white !important;
     padding: initial !important;
     margin: initial !important;
+    width: initial !important;
 }
 #option__ input:not([type="file"]){
     height: 20px !important;

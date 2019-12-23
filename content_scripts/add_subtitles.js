@@ -1,33 +1,34 @@
 (function(){
 
 if(window.has_run){
-    var option_div = document.getElementById("option__");
-    option_div.style.display = option_div.style.display == "none" ? "inline-block" : "none";
+    var menu = document.getElementById("addsubtitle_menu");
+    menu.style.display = menu.style.display == "none" ? "inline-block" : "none";
     return;
 }
 else{
-    if(document.getElementById("option__") != undefined){
-        document.getElementById("option__").outerHTML = "";
-        document.getElementById("subtitle__").outerHTML = "";
+    if(document.getElementById("addsubtitle_menu") != null){
+        document.getElementById("addsubtitle_menu").outerHTML = "";
+        document.getElementById("subtitle_element").outerHTML = "";
     }
 }
 window.has_run = true;
 
-console.log(this.document.body);
+var subtitle_element = document.createElement("div");
+subtitle_element.id = "subtitle_element";
+document.body.append(subtitle_element);
 
-var sub_element = document.createElement("div");
-sub_element.id = "subtitle__";
-document.body.append(sub_element);
+var video_fullscreen = false;
 
 var menu = document.createElement("div");
-menu.id = "option__";
+menu.id = "addsubtitle_menu";
 menu.innerHTML = `
 <p style="margin-top: 0px;">
-    List of video elements: 
+    List of video elements:
     <button id="refresh_video_list">Refresh</button>
 </p>
 <p id="video_elements_list">
 </p>
+<button id="make_video_fullscreen" disabled="">Make video fullscreen</button>
 <p>
     Subtitles file: <input type="file" accept=".srt" id="subtitle_file_input">
 </p>
@@ -47,12 +48,12 @@ document.body.append(menu);
 var style = document.createElement("style");
 style.type = "text/css";
 style.innerHTML = `
-#option__{
+#addsubtitle_menu{
     color: black !important;
     font-size: inherit;
     background-color: white !important;
     display: inline-block;
-    z-index: 99999999 !important;
+    z-index: 100000 !important;
     position: fixed !important;
     right: 14px !important;
     bottom: 14px !important;
@@ -62,27 +63,27 @@ style.innerHTML = `
     padding-right: 16px !important;
     padding-top: 12px !important;
 }
-#option__ input{
+#addsubtitle_menu input{
     display: inline !important;
     background-color: white !important;
     padding: initial !important;
     margin: initial !important;
     width: initial !important;
 }
-#option__ input:not([type="file"]){
+#addsubtitle_menu input:not([type="file"]){
     height: 20px !important;
 }
-#option__ input:not([type="file"]), #option__ textarea{
+#addsubtitle_menu input:not([type="file"]), #addsubtitle_menu textarea{
     border: 1px solid black !important;
     box-sizing: border-box !important;
     margin: initial !important;
     padding: initial !important;
 }
-#option__ *{
+#addsubtitle_menu *{
     font-family: monospace !important;
     font-size: 12px !important;
 }
-#option__ p{
+#addsubtitle_menu p{
     margin-top: 12px;
     margin-bottom: 12px;
 }
@@ -112,57 +113,49 @@ style.innerHTML = `
 `;
 document.getElementsByTagName("head")[0].appendChild(style);
 
-var video_elements = document.getElementsByTagName("video");
-var video_element;
-var video_elements_list = document.getElementById("video_elements_list");
+var the_video_element = null;
 
-function do_video_elements_list(){
+function update_video_elements_list(){
+    var video_elements = document.getElementsByTagName("video");
+    var video_elements_list = document.getElementById("video_elements_list");
     video_elements_list.innerHTML = "";
     for(var i = 0; i < video_elements.length; i++){
-        var v = document.createElement("div");
-        v.className = "video_el";
-        v.textContent = "id: "+video_elements[i].id;
+        var video_list_item = document.createElement("div");
+        video_list_item.className = "video_list_item";
+        video_list_item.textContent = video_elements[i].currentSrc;
         (function(){
-            var video_el = video_elements[i];
-            v.addEventListener("mouseenter", function(){
+            var current_video_element = video_elements[i];
+            video_list_item.addEventListener("mouseenter", function(){
                 this.classList.add("hover_video_list");
-                video_el.classList.add("hover_video_element");
+                current_video_element.classList.add("hover_video_element");
             });
-            v.addEventListener("mouseleave", function(){
+            video_list_item.addEventListener("mouseleave", function(){
                 this.classList.remove("hover_video_list");
-                video_el.classList.remove("hover_video_element");
+                current_video_element.classList.remove("hover_video_element");
             });
-            v.addEventListener("click", function(){
-                if(video_element == video_el){
-                    video_element = undefined;
-                    var list = document.getElementsByClassName("video_el");
-                    for(var i = 0; i < list.length; i++){
-                        list[i].classList.remove("selected_video_list");
-                    }
+            video_list_item.addEventListener("click", function(){
+                var list = document.getElementsByClassName("video_list_item");
+                for(var i = 0; i < list.length; i++){
+                    list[i].classList.remove("selected_video_list");
+                }
+                if(the_video_element == current_video_element){
+                    the_video_element = null;
+                    document.getElementById("make_video_fullscreen").disabled = true;
                     subtitle_element.innerHTML = "";
                 }
                 else{
-                    video_element = video_el;
-                    var list = document.getElementsByClassName("video_el");
-                    for(var i = 0; i < list.length; i++){
-                        list[i].classList.remove("selected_video_list");
-                    }
+                    the_video_element = current_video_element;
+                    document.getElementById("make_video_fullscreen").disabled = false;
                     this.classList.add("selected_video_list");
                     subtitle_pos();
                 }
             });
         }());
-        video_elements_list.append(v);
+        video_elements_list.append(video_list_item);
     }
 }
 
-do_video_elements_list();
-document.getElementById("refresh_video_list").addEventListener("click", function(){
-    do_video_elements_list();
-    subtitle_pos();
-});
-
-var subtitle_element = document.getElementById("subtitle__");
+var subtitle_element = document.getElementById("subtitle_element");
 var default_style = `font-family: sans-serif;
 font-size: 26px;
 color: white;
@@ -180,7 +173,7 @@ var subtitles = [];
 
 setInterval(function(){
     if(subtitles.length == 0) return;
-    var t = video_element.currentTime;
+    var t = the_video_element.currentTime;
     var found = -1;
     for(var i = 0; i < subtitles.length; i++){
         if(subtitles[i].begin+subtitle_offset <= t && subtitles[i].end+subtitle_offset >= t){
@@ -208,19 +201,29 @@ function get_offset(e){
 }
 
 function subtitle_pos(){
-    var sub_pos_top = video_element.offsetHeight+get_offset(video_element)[0]+subtitle_position;
-    var sub_pos_left = get_offset(video_element)[1];
-    subtitle_element.style.position = "absolute";
-    subtitle_element.style.width = video_element.offsetWidth+"px";
-    subtitle_element.style.top = sub_pos_top+"px";
-    subtitle_element.style.left = sub_pos_left+"px";
+    if(video_fullscreen){
+        var sub_pos_top = the_video_element.getBoundingClientRect().top+the_video_element.offsetHeight+subtitle_position;
+        var sub_pos_left = get_offset(the_video_element)[1];
+        subtitle_element.style.position = "fixed";
+        subtitle_element.style.width = the_video_element.offsetWidth+"px";
+        subtitle_element.style.top = sub_pos_top+"px";
+        subtitle_element.style.left = sub_pos_left+"px";
+    }
+    else{
+        var sub_pos_top = the_video_element.offsetHeight+get_offset(the_video_element)[0]+subtitle_position;
+        var sub_pos_left = get_offset(the_video_element)[1];
+        subtitle_element.style.position = "absolute";
+        subtitle_element.style.width = the_video_element.offsetWidth+"px";
+        subtitle_element.style.top = sub_pos_top+"px";
+        subtitle_element.style.left = sub_pos_left+"px";
+    }
 }
 
 function time_parse(t){
-    var split = t.split(":")
+    var split = t.split(":");
     var hours = split[0]*60*60;
     var minutes = split[1]*60;
-    var seconds = parseFloat(t.split(":")[2].replace(',', '.'));
+    var seconds = parseFloat(t.split(":")[2].replace(",", "."));
     return hours+minutes+seconds;
 }
 
@@ -238,6 +241,45 @@ function parse_subtitles(subs){
         subtitles.push({begin: time_parse(time[0]), end: time_parse(time[1]), text: text.join("<br>")});
     }
 }
+
+function switch_fullscreen_video(){
+    if(the_video_element == null) return;
+
+    video_fullscreen = true;
+
+    if(!document.getElementById("fullscreen_video_black_background")){
+        var black_background = document.createElement("div");
+        black_background.id = "fullscreen_video_black_background";
+        black_background.style.backgroundColor = "black";
+        black_background.style.margin = "0px";
+        black_background.style.padding = "0px";
+        black_background.style.position = "absolute";
+        black_background.style.top = "0px";
+        black_background.style.left = "0px";
+        black_background.style.zIndex = "99997";
+        black_background.style.width = "100%";
+        black_background.style.height = "100%";
+        document.body.append(black_background);
+    }
+
+    document.getElementById("subtitle_element").style.zIndex = "99999";
+    document.documentElement.overflow = "hidden";
+    document.body.style.overflow = "hidden";
+    the_video_element.style.position = "fixed";
+    the_video_element.style.top = "0px";
+    the_video_element.style.left = "0px";
+    the_video_element.style.zIndex = "99998";
+    the_video_element.style.width = "100%";
+    the_video_element.style.height = "100%";
+
+    subtitle_pos();
+}
+
+update_video_elements_list();
+document.getElementById("refresh_video_list").addEventListener("click", function(){
+    update_video_elements_list();
+    subtitle_pos();
+});
 
 document.getElementById("subtitle_file_input").addEventListener("change", function(){
     var subtitle_file = this.files[0];
@@ -262,6 +304,16 @@ document.getElementById("subtitle_position_input").addEventListener("change", fu
 
 document.getElementById("subtitle_style_input").addEventListener("change", function(){
     subtitle_element.style = document.getElementById("subtitle_style_input").value;
+    document.getElementById("subtitle_element").style.zIndex = "99999";
     subtitle_pos();
 });
+
+document.getElementById("make_video_fullscreen").addEventListener("click", function(){
+    switch_fullscreen_video();
+});
+
+window.addEventListener("resize", function(){
+    subtitle_pos();
+});
+
 })();

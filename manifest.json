@@ -1,7 +1,7 @@
 {
 	"manifest_version": 2,
 	"name": "Add Subtitles",
-	"version": "1.0",
+	"version": "1.1",
 	"description": "Add subtitles to a video element.",
     "homepage_url": "https://github.com/imadr/add-subtitles",
     "icons": {

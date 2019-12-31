@@ -22,25 +22,22 @@ var video_fullscreen = false;
 var menu = document.createElement("div");
 menu.id = "addsubtitle_menu";
 menu.innerHTML = `
-<p style="margin-top: 0px;">
+<button id="close_button">Close</button>
+<p>
     List of video elements:
-    <button id="refresh_video_list">Refresh</button>
+    <button id="refresh_video_list">Refresh List</button>
 </p>
 <p id="video_elements_list">
 </p>
-<button id="make_video_fullscreen" disabled="">Make video fullscreen</button>
 <p>
-    Subtitles file: <input type="file" accept=".srt" id="subtitle_file_input">
-</p>
-<p>
-    Offset: <input type="number" step="0.01" id="subtitle_offset_input"> seconds
-</p>
-<p>
-    Position offset: <input type="number" id="subtitle_position_input"> seconds
-</p>
-<p>
-    Subtitles style:<br>
-    <textarea id="subtitle_style_input"></textarea>
+    <button id="make_video_fullscreen">Make video fullscreen</button><br>
+    Subtitles file: <input type="file" accept=".srt" id="subtitle_file_input"><br>
+    Time offset: <input type="number" step="0.01" id="subtitle_offset_input" value="0"> seconds<br>
+    Position offset: <input type="number" id="subtitle_offset_top_input" value="-10"> px<br>
+    Font size: <input type="number" id="subtitle_font_size" value="26"> px<br>
+    Font : <input type="text" id="subtitle_font" value="Arial"><br>
+    Font color: <input type="text" id="subtitle_font_color" value="rgba(255, 255, 255, 1)"><br>
+    Background color: <input type="text" id="subtitle_background_color" value="rgba(0, 0, 0, 0.7)"><br>
 </p>
 `;
 document.body.append(menu);
@@ -48,51 +45,43 @@ document.body.append(menu);
 var style = document.createElement("style");
 style.type = "text/css";
 style.innerHTML = `
-#addsubtitle_menu{
-    color: black !important;
-    font-size: inherit;
-    background-color: white !important;
-    display: inline-block;
-    z-index: 100000 !important;
-    position: fixed !important;
-    right: 14px !important;
-    bottom: 14px !important;
-    width: 430px !important;
-    border: 1px solid black !important;
-    padding-left: 14px !important;
-    padding-right: 16px !important;
-    padding-top: 12px !important;
+#addsubtitle_menu *{
+    all: revert;
+    font-family: monospace !important;
+    font-size: 12px !important;
+    line-height: 14px !important;
+    letter-spacing: normal !important;
 }
-#addsubtitle_menu input{
-    display: inline !important;
-    background-color: white !important;
-    padding: initial !important;
-    margin: initial !important;
-    width: initial !important;
+#addsubtitle_menu{
+    z-index: 100000 !important;
+    position: fixed;
+    right: 14px;
+    bottom: 14px;
+    width: 430px;
+    border: 1px solid black;
+    padding-left: 14px;
+    padding-right: 16px;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    background-color: white;
+    color: black;
+}
+#addsubtitle_menu button{
+    background-color: white;
+    border: 1px solid black;
+    color: black;
+    padding: 2px;
 }
 #addsubtitle_menu input:not([type="file"]){
-    height: 20px !important;
-}
-#addsubtitle_menu input:not([type="file"]), #addsubtitle_menu textarea{
     border: 1px solid black !important;
     box-sizing: border-box !important;
     margin: initial !important;
     padding: initial !important;
-}
-#addsubtitle_menu *{
-    font-family: monospace !important;
-    font-size: 12px !important;
-}
-#addsubtitle_menu p{
-    margin-top: 12px;
-    margin-bottom: 12px;
-}
-#subtitle_style_input{
-    width: 100% !important;
-    min-height: 100px !important;
+    height: 20px !important;
+    width: 200px;
 }
 #video_elements_list{
-    margin-top: 0px !important;
+    margin-top: 8px !important;
 }
 #video_elements_list div{
     margin-top: 0px !important;
@@ -110,6 +99,27 @@ style.innerHTML = `
 .hover_video_element{
     border: 4px solid red !important;
 }
+#subtitle_element{
+    text-align: center;
+    pointer-events: none;
+}
+.subtitle_line{
+    display: inline-block;
+    text-align: center;
+    z-index: 99999;
+}
+#addsubtitle_menu br{
+    margin: 0px;
+    margin-top: 15px !important;
+}
+#addsubtitle_menu #close_button{
+    position: absolute;
+    top: 2px;
+    right: 2px;
+}
+#addsubtitle_menu p{
+    margin: 0px;
+}
 `;
 document.getElementsByTagName("head")[0].appendChild(style);
 
@@ -119,6 +129,9 @@ function update_video_elements_list(){
     var video_elements = document.getElementsByTagName("video");
     var video_elements_list = document.getElementById("video_elements_list");
     video_elements_list.innerHTML = "";
+    if(video_elements.length == 0){
+        video_elements_list.innerHTML = "No video elements found.<br>If your video is inside and iframe, press shift+right click on it then \"This Frame\" > \"Open Frame in New Tab\""
+    }
     for(var i = 0; i < video_elements.length; i++){
         var video_list_item = document.createElement("div");
         video_list_item.className = "video_list_item";
@@ -140,14 +153,11 @@ function update_video_elements_list(){
                 }
                 if(the_video_element == current_video_element){
                     the_video_element = null;
-                    document.getElementById("make_video_fullscreen").disabled = true;
                     subtitle_element.innerHTML = "";
                 }
                 else{
                     the_video_element = current_video_element;
-                    document.getElementById("make_video_fullscreen").disabled = false;
                     this.classList.add("selected_video_list");
-                    subtitle_pos();
                 }
             });
         }());
@@ -156,20 +166,15 @@ function update_video_elements_list(){
 }
 
 var subtitle_element = document.getElementById("subtitle_element");
-var default_style = `font-family: sans-serif;
-font-size: 26px;
-color: white;
-text-shadow: 0px 0px 3px black;
-text-align: center;
-pointer-events: none;`;
-document.getElementById("subtitle_style_input").value = default_style;
-subtitle_element.style = default_style;
-document.getElementById("subtitle_offset_input").value = 0;
-document.getElementById("subtitle_position_input").value = -50;
 var subtitle_offset = parseFloat(document.getElementById("subtitle_offset_input").value);
-var subtitle_position = parseFloat(document.getElementById("subtitle_position_input").value);
+var subtitle_offset_top = parseFloat(document.getElementById("subtitle_offset_top_input").value);
 
 var subtitles = [];
+
+var subtitle_font = document.getElementById("subtitle_font").value;
+var subtitle_font_size = document.getElementById("subtitle_font_size").value;
+var subtitle_font_color = document.getElementById("subtitle_font_color").value;
+var subtitle_background_color = document.getElementById("subtitle_background_color").value;
 
 setInterval(function(){
     if(subtitles.length == 0) return;
@@ -185,8 +190,17 @@ setInterval(function(){
         subtitle_element.textContent = "";
     }
     else{
-        subtitle_element.textContent = subtitles[found].text;
+        subtitle_element.innerHTML = "";
+        for(var i = 0; i < subtitles[found].text.length; i++){
+            var subtitle_line = document.createElement("div");
+            subtitle_line.textContent = subtitles[found].text[i];
+            subtitle_line.className = "subtitle_line";
+            subtitle_line.style.cssText = "font-family: "+subtitle_font+";font-size: "+subtitle_font_size+"px;color:"+subtitle_font_color+";background-color:"+subtitle_background_color+";";
+            subtitle_element.appendChild(subtitle_line);
+            subtitle_element.appendChild(document.createElement("br"));
+        }
     }
+    subtitle_pos();
 }, 100);
 
 function get_offset(e){
@@ -201,8 +215,9 @@ function get_offset(e){
 }
 
 function subtitle_pos(){
+    var subtitle_height = subtitle_element.getBoundingClientRect().height;
     if(video_fullscreen){
-        var sub_pos_top = the_video_element.getBoundingClientRect().top+the_video_element.offsetHeight+subtitle_position;
+        var sub_pos_top = the_video_element.getBoundingClientRect().top+the_video_element.offsetHeight+subtitle_offset_top-subtitle_height;
         var sub_pos_left = get_offset(the_video_element)[1];
         subtitle_element.style.position = "fixed";
         subtitle_element.style.width = the_video_element.offsetWidth+"px";
@@ -210,13 +225,18 @@ function subtitle_pos(){
         subtitle_element.style.left = sub_pos_left+"px";
     }
     else{
-        var sub_pos_top = the_video_element.offsetHeight+get_offset(the_video_element)[0]+subtitle_position;
+        var the_video_element_height = the_video_element.offsetHeight;
+        var the_video_element_top = get_offset(the_video_element)[0];
+
+        var sub_pos_top = the_video_element_height+the_video_element_top+subtitle_offset_top-subtitle_height;
         var sub_pos_left = get_offset(the_video_element)[1];
+
         subtitle_element.style.position = "absolute";
         subtitle_element.style.width = the_video_element.offsetWidth+"px";
         subtitle_element.style.top = sub_pos_top+"px";
         subtitle_element.style.left = sub_pos_left+"px";
     }
+    subtitle_element.style.zIndex = "99999";
 }
 
 function time_parse(t){
@@ -238,12 +258,14 @@ function parse_subtitles(subs){
         for(var j = 2; j < s.length; j++){
             text.push(s[j]);
         }
-        subtitles.push({begin: time_parse(time[0]), end: time_parse(time[1]), text: text.join("<br>")});
+        subtitles.push({begin: time_parse(time[0]), end: time_parse(time[1]), text: text});
     }
 }
 
 function switch_fullscreen_video(){
     if(the_video_element == null) return;
+
+    document.documentElement.requestFullscreen();
 
     video_fullscreen = true;
 
@@ -263,22 +285,18 @@ function switch_fullscreen_video(){
     }
 
     document.getElementById("subtitle_element").style.zIndex = "99999";
-    document.documentElement.overflow = "hidden";
-    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
     the_video_element.style.position = "fixed";
     the_video_element.style.top = "0px";
     the_video_element.style.left = "0px";
     the_video_element.style.zIndex = "99998";
     the_video_element.style.width = "100%";
     the_video_element.style.height = "100%";
-
-    subtitle_pos();
 }
 
 update_video_elements_list();
 document.getElementById("refresh_video_list").addEventListener("click", function(){
     update_video_elements_list();
-    subtitle_pos();
 });
 
 document.getElementById("subtitle_file_input").addEventListener("change", function(){
@@ -290,30 +308,38 @@ document.getElementById("subtitle_file_input").addEventListener("change", functi
         }
     })(file_reader);
     file_reader.readAsText(subtitle_file);
-    subtitle_pos();
 });
 
 document.getElementById("subtitle_offset_input").addEventListener("change", function(){
     subtitle_offset = parseFloat(document.getElementById("subtitle_offset_input").value);
 });
 
-document.getElementById("subtitle_position_input").addEventListener("change", function(){
-    subtitle_position = parseFloat(document.getElementById("subtitle_position_input").value);
-    subtitle_pos();
+document.getElementById("subtitle_offset_top_input").addEventListener("change", function(){
+    subtitle_offset_top = parseFloat(document.getElementById("subtitle_offset_top_input").value);
 });
 
-document.getElementById("subtitle_style_input").addEventListener("change", function(){
-    subtitle_element.style = document.getElementById("subtitle_style_input").value;
-    document.getElementById("subtitle_element").style.zIndex = "99999";
-    subtitle_pos();
+document.getElementById("subtitle_font_size").addEventListener("change", function(){
+    subtitle_font_size = this.value;
+});
+
+document.getElementById("subtitle_font_color").addEventListener("change", function(){
+    subtitle_font_color = this.value;
+});
+
+document.getElementById("subtitle_background_color").addEventListener("change", function(){
+    subtitle_background_color = this.value;
+});
+
+document.getElementById("subtitle_font").addEventListener("change", function(){
+    subtitle_font = this.value;
 });
 
 document.getElementById("make_video_fullscreen").addEventListener("click", function(){
     switch_fullscreen_video();
 });
 
-window.addEventListener("resize", function(){
-    subtitle_pos();
+document.getElementById("close_button").addEventListener("click", function(){
+    menu.style.display = "none";
 });
 
 })();

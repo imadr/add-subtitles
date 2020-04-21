@@ -1,7 +1,8 @@
 (function(){
 
 if(window.has_run){
-    var menu = document.getElementById("addsubtitle_menu");
+    var shadow_root = document.getElementById("shadow_host").shadowRoot;
+    var menu = shadow_root.getElementById("addsubtitle_menu");
     menu.style.display = menu.style.display == "none" ? "inline-block" : "none";
     return;
 }
@@ -19,41 +20,65 @@ document.body.append(subtitle_element);
 
 var video_fullscreen = false;
 
+var shadow_host = document.createElement("div");
+shadow_host.id = "shadow_host";
+document.body.appendChild(shadow_host);
+var shadow = shadow_host.attachShadow({mode: "open"});
+var shadow_root = shadow_host.shadowRoot;
+
 var menu = document.createElement("div");
 menu.id = "addsubtitle_menu";
 menu.innerHTML = `
 <button id="close_button">Close</button>
-<p>
+<div class="line">
     List of video elements:
     <button id="refresh_video_list">Refresh List</button>
-</p>
-<p id="video_elements_list">
-</p>
-<p>
-    <button id="make_video_fullscreen">Make video fullscreen</button><br>
-    Subtitles file: <input type="file" accept=".srt" id="subtitle_file_input"><br>
-    Time offset: <input type="number" step="0.01" id="subtitle_offset_input" value="0"> seconds<br>
-    Position offset: <input type="number" id="subtitle_offset_top_input" value="-10"> px<br>
-    Font size: <input type="number" id="subtitle_font_size" value="26"> px<br>
-    Font : <input type="text" id="subtitle_font" value="Arial"><br>
-    Font color: <input type="text" id="subtitle_font_color" value="rgba(255, 255, 255, 1)"><br>
-    Background color: <input type="text" id="subtitle_background_color" value="rgba(0, 0, 0, 0.7)"><br>
-</p>
+</div>
+<div id="video_elements_list">
+</div>
+<div class="line">
+    <button id="make_video_fullscreen">Make video fullscreen</button>
+</div>
+<div class="line">
+    Subtitles file: <input type="file" accept=".srt,.vtt" id="subtitle_file_input">
+</div>
+<div class="line">
+    Time offset: <input type="number" step="0.01" id="subtitle_offset_input" value="0"> seconds
+</div>
+<div class="line">
+    Position offset: <input type="number" id="subtitle_offset_top_input" value="-10"> px
+</div>
+<div class="line">
+    Font size: <input type="number" id="subtitle_font_size" value="26"> px
+</div>
+<div class="line">
+    Font : <input type="text" id="subtitle_font" value="Arial">
+</div>
+<div class="line">
+    Font color: <input type="text" id="subtitle_font_color" value="rgba(255, 255, 255, 1)">
+</div>
+<div class="line">
+    Background color: <input type="text" id="subtitle_background_color" value="rgba(0, 0, 0, 0.7)">
+</div>
 `;
-document.body.append(menu);
+shadow.appendChild(menu);
 
 var style = document.createElement("style");
-style.type = "text/css";
-style.innerHTML = `
+style.textContent = `
 #addsubtitle_menu *{
-    all: revert;
-    font-family: monospace !important;
-    font-size: 12px !important;
-    line-height: 14px !important;
-    letter-spacing: normal !important;
+    font-family: monospace;
+    font-size: 12px;
+    line-height: normal !important;
+    box-sizing: border-box !important;
+}
+button{
+    cursor: pointer;
+}
+.line{
+    margin-top: 7px;
 }
 #addsubtitle_menu{
-    z-index: 100000 !important;
+    z-index: 1000000;
     position: fixed;
     right: 14px;
     bottom: 14px;
@@ -61,43 +86,57 @@ style.innerHTML = `
     border: 1px solid black;
     padding-left: 14px;
     padding-right: 16px;
-    padding-top: 12px;
+    padding-top: 6px;
     padding-bottom: 12px;
     background-color: white;
     color: black;
 }
-#addsubtitle_menu button{
+button{
     background-color: white;
     border: 1px solid black;
     color: black;
     padding: 2px;
 }
-#addsubtitle_menu input:not([type="file"]){
-    border: 1px solid black !important;
-    box-sizing: border-box !important;
-    margin: initial !important;
-    padding: initial !important;
-    height: 20px !important;
+button:hover{
+    background-color: #f0f0f0;
+}
+button:active{
+    background-color: #ddd;
+}
+input:not([type="file"]){
+    border: 1px solid black;
+    height: 18px;
     width: 200px;
 }
 #video_elements_list{
-    margin-top: 8px !important;
+    margin-top: 8px;
 }
 #video_elements_list div{
-    margin-top: 0px !important;
+    margin-top: 0px;
     border: 1px solid black;
-    margin-top: -1px !important;
-    padding: 3px !important;
-    cursor: pointer !important;
+    margin-top: -1px;
+    padding: 3px;
+    cursor: pointer;
 }
-.selected_video_list{
-    border: 2px solid red !important;
+#video_elements_list .selected_video_list, #video_elements_list .hover_video_list{
+    border: 2px solid red;
 }
-.hover_video_list{
-    border: 2px solid red !important;
+#close_button{
+    position: absolute;
+    top: 12px;
+    right: 15px;
 }
+#no_videos{
+    border: 1px solid black;
+    padding: 5px;
+}
+`;
+shadow.appendChild(style);
+
+style = document.createElement("style");
+style.textContent = `
 .hover_video_element{
-    border: 4px solid red !important;
+    border: 4px solid red;
 }
 #subtitle_element{
     text-align: center;
@@ -107,30 +146,18 @@ style.innerHTML = `
     display: inline-block;
     text-align: center;
     z-index: 99999;
-}
-#addsubtitle_menu br{
-    margin: 0px;
-    margin-top: 15px !important;
-}
-#addsubtitle_menu #close_button{
-    position: absolute;
-    top: 2px;
-    right: 2px;
-}
-#addsubtitle_menu p{
-    margin: 0px;
-}
-`;
+}`;
 document.getElementsByTagName("head")[0].appendChild(style);
 
 var the_video_element = null;
 
 function update_video_elements_list(){
     var video_elements = document.getElementsByTagName("video");
-    var video_elements_list = document.getElementById("video_elements_list");
+    var video_elements_list = shadow_root.getElementById("video_elements_list");
     video_elements_list.innerHTML = "";
     if(video_elements.length == 0){
-        video_elements_list.innerHTML = "No video elements found.<br>If your video is inside and iframe, press shift+right click on it then \"This Frame\" > \"Open Frame in New Tab\""
+        video_elements_list.innerHTML = "<div id=\"no_videos\">No video elements found.<br>If your video is inside and iframe, press shift+right click on it then \"This Frame\" > \"Open Frame in New Tab\"</div>"
+        return;
     }
     for(var i = 0; i < video_elements.length; i++){
         var video_list_item = document.createElement("div");
@@ -147,7 +174,7 @@ function update_video_elements_list(){
                 current_video_element.classList.remove("hover_video_element");
             });
             video_list_item.addEventListener("click", function(){
-                var list = document.getElementsByClassName("video_list_item");
+                var list = shadow_root.querySelectorAll(".video_list_item");
                 for(var i = 0; i < list.length; i++){
                     list[i].classList.remove("selected_video_list");
                 }
@@ -166,15 +193,15 @@ function update_video_elements_list(){
 }
 
 var subtitle_element = document.getElementById("subtitle_element");
-var subtitle_offset = parseFloat(document.getElementById("subtitle_offset_input").value);
-var subtitle_offset_top = parseFloat(document.getElementById("subtitle_offset_top_input").value);
+var subtitle_offset = parseFloat(shadow_root.getElementById("subtitle_offset_input").value);
+var subtitle_offset_top = parseFloat(shadow_root.getElementById("subtitle_offset_top_input").value);
 
 var subtitles = [];
 
-var subtitle_font = document.getElementById("subtitle_font").value;
-var subtitle_font_size = document.getElementById("subtitle_font_size").value;
-var subtitle_font_color = document.getElementById("subtitle_font_color").value;
-var subtitle_background_color = document.getElementById("subtitle_background_color").value;
+var subtitle_font = shadow_root.getElementById("subtitle_font").value;
+var subtitle_font_size = shadow_root.getElementById("subtitle_font_size").value;
+var subtitle_font_color = shadow_root.getElementById("subtitle_font_color").value;
+var subtitle_background_color = shadow_root.getElementById("subtitle_background_color").value;
 
 setInterval(function(){
     if(subtitles.length == 0) return;
@@ -299,11 +326,11 @@ function switch_fullscreen_video(){
 }
 
 update_video_elements_list();
-document.getElementById("refresh_video_list").addEventListener("click", function(){
+shadow_root.getElementById("refresh_video_list").addEventListener("click", function(){
     update_video_elements_list();
 });
 
-document.getElementById("subtitle_file_input").addEventListener("change", function(){
+shadow_root.getElementById("subtitle_file_input").addEventListener("change", function(){
     var subtitle_file = this.files[0];
     var file_reader = new FileReader();
     file_reader.onload = (function(reader){
@@ -314,35 +341,35 @@ document.getElementById("subtitle_file_input").addEventListener("change", functi
     file_reader.readAsText(subtitle_file);
 });
 
-document.getElementById("subtitle_offset_input").addEventListener("change", function(){
-    subtitle_offset = parseFloat(document.getElementById("subtitle_offset_input").value);
+shadow_root.getElementById("subtitle_offset_input").addEventListener("input", function(){
+    subtitle_offset = parseFloat(shadow_root.getElementById("subtitle_offset_input").value);
 });
 
-document.getElementById("subtitle_offset_top_input").addEventListener("change", function(){
-    subtitle_offset_top = parseFloat(document.getElementById("subtitle_offset_top_input").value);
+shadow_root.getElementById("subtitle_offset_top_input").addEventListener("input", function(){
+    subtitle_offset_top = parseFloat(shadow_root.getElementById("subtitle_offset_top_input").value);
 });
 
-document.getElementById("subtitle_font_size").addEventListener("change", function(){
+shadow_root.getElementById("subtitle_font_size").addEventListener("input", function(){
     subtitle_font_size = this.value;
 });
 
-document.getElementById("subtitle_font_color").addEventListener("change", function(){
+shadow_root.getElementById("subtitle_font_color").addEventListener("input", function(){
     subtitle_font_color = this.value;
 });
 
-document.getElementById("subtitle_background_color").addEventListener("change", function(){
+shadow_root.getElementById("subtitle_background_color").addEventListener("input", function(){
     subtitle_background_color = this.value;
 });
 
-document.getElementById("subtitle_font").addEventListener("change", function(){
+shadow_root.getElementById("subtitle_font").addEventListener("input", function(){
     subtitle_font = this.value;
 });
 
-document.getElementById("make_video_fullscreen").addEventListener("click", function(){
+shadow_root.getElementById("make_video_fullscreen").addEventListener("click", function(){
     switch_fullscreen_video();
 });
 
-document.getElementById("close_button").addEventListener("click", function(){
+shadow_root.getElementById("close_button").addEventListener("click", function(){
     menu.style.display = "none";
 });
 

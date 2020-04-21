@@ -256,7 +256,7 @@ function parse_subtitles(subs){
         s = subs[i].split("\n");
         if(s.length <= 1) continue;
         var pos = s[0].indexOf(" --> ") > 0 ? 0 : (s[1].indexOf(" --> ") > 0 ? 1 : -1);
-        if(pos < 0) continue; 
+        if(pos <= -1) continue; 
         time = s[pos].split(" --> ");
         text = [];
         for(var j = pos + 1; j < s.length; j++){

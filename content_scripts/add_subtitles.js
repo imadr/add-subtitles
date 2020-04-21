@@ -248,14 +248,18 @@ function time_parse(t){
 }
 
 function parse_subtitles(subs){
+    subtitles.length = 0;
     subs = subs.replace(/\r/g, "");
     subs = subs.split("\n\n");
 
     for(var i = 0; i < subs.length; i++){
         s = subs[i].split("\n");
-        time = s[1].split(" --> ");
+        if(s.length <= 1) continue;
+        var pos = s[0].indexOf(" --> ") > 0 ? 0 : (s[1].indexOf(" --> ") > 0 ? 1 : -1);
+        if(pos < 0) continue; 
+        time = s[pos].split(" --> ");
         text = [];
-        for(var j = 2; j < s.length; j++){
+        for(var j = pos + 1; j < s.length; j++){
             text.push(s[j]);
         }
         subtitles.push({begin: time_parse(time[0]), end: time_parse(time[1]), text: text});

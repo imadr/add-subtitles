@@ -37,7 +37,7 @@ menu.innerHTML = `
 <div id="video_elements_list">
 </div>
 <div class="line">
-    <button id="make_video_fullscreen">Make video fullscreen</button>
+    <button id="make_video_fullscreen">Make video fullscreen (can be buggy)</button>
 </div>
 <div class="line">
     Subtitles file: <input type="file" accept=".srt,.vtt" id="subtitle_file_input">
@@ -103,6 +103,12 @@ button:hover{
 button:active{
     background-color: #ddd;
 }
+input[type="file"]{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    widtH: 100%;
+}
 input:not([type="file"]){
     border: 1px solid black;
     height: 18px;
@@ -110,9 +116,12 @@ input:not([type="file"]){
 }
 #video_elements_list{
     margin-top: 8px;
+    padding-top: 8px;
 }
-#video_elements_list div{
-    margin-top: 0px;
+.video_list_item{
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
     border: 1px solid black;
     margin-top: -1px;
     padding: 3px;
@@ -283,7 +292,7 @@ function parse_subtitles(subs){
         s = subs[i].split("\n");
         if(s.length <= 1) continue;
         var pos = s[0].indexOf(" --> ") > 0 ? 0 : (s[1].indexOf(" --> ") > 0 ? 1 : -1);
-        if(pos <= -1) continue; 
+        if(pos <= -1) continue;
         time = s[pos].split(" --> ");
         text = [];
         for(var j = pos + 1; j < s.length; j++){
@@ -306,7 +315,7 @@ function switch_fullscreen_video(){
         black_background.style.backgroundColor = "black";
         black_background.style.margin = "0px";
         black_background.style.padding = "0px";
-        black_background.style.position = "absolute";
+        black_background.style.position = "fixed";
         black_background.style.top = "0px";
         black_background.style.left = "0px";
         black_background.style.zIndex = "99997";

@@ -229,7 +229,7 @@ setInterval(function(){
         subtitle_element.innerHTML = "";
         for(var i = 0; i < subtitles[found].text.length; i++){
             var subtitle_line = document.createElement("div");
-            subtitle_line.textContent = subtitles[found].text[i];
+            subtitle_line.innerHTML = subtitles[found].text[i];
             subtitle_line.className = "subtitle_line";
             subtitle_line.style.cssText = "font-family: "+subtitle_font+";font-size: "+subtitle_font_size+"px;color:"+subtitle_font_color+";background-color:"+subtitle_background_color+";";
             subtitle_element.appendChild(subtitle_line);

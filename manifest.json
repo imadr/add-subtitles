@@ -13,7 +13,7 @@
         "<all_urls>"
     ],
     "background": {
-        "scripts": ["background_script.js", "zip.js"]
+        "scripts": ["background_script.js"]
     },
     "browser_action": {
         "default_icon": "icons/icon-32.png",

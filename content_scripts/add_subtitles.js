@@ -384,7 +384,7 @@ shadow_root.getElementById("refresh_video_list").addEventListener("click", funct
 shadow_root.getElementById("subtitle_upload_button").addEventListener("click", function(){
     var subtitle_file_input = shadow_root.getElementById("subtitle_file_input");
     var subtitle_url_input = shadow_root.getElementById("subtitle_url_input");
-    shadow_root.getElementById("upload_error_message").innerHTML = "";
+    shadow_root.getElementById("upload_error_message").textContent = "";
     if(subtitle_url_input.value.length > 0){
         fetch(subtitle_url_input.value, {
             method: "GET"
@@ -424,20 +424,20 @@ shadow_root.getElementById("subtitle_upload_button").addEventListener("click", f
                 });
             }
         }).catch((error) => {
-            shadow_root.getElementById("upload_error_message").innerHTML = error;
+            shadow_root.getElementById("upload_error_message").textContent = error;
         });
     }
     else{
         var subtitle_file = subtitle_file_input.files[0];
         if(subtitle_file == undefined){
-            shadow_root.getElementById("upload_error_message").innerHTML = "No file selected";
+            shadow_root.getElementById("upload_error_message").textContent = "No file selected";
         }
         var file_reader = new FileReader();
         file_reader.onload = function(event){
             parse_subtitles(event.target.result);
         }
         file_reader.onerror = function(event){
-            shadow_root.getElementById("upload_error_message").innerHTML = event;
+            shadow_root.getElementById("upload_error_message").textContent = event;
         }
         file_reader.readAsText(subtitle_file);
     }

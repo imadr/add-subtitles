@@ -40,7 +40,18 @@ menu.innerHTML = `
     <button id="make_video_fullscreen">Make video fullscreen (can be buggy)</button>
 </div>
 <div class="line">
-    Subtitles file: <input type="file" accept=".srt,.vtt" id="subtitle_file_input">
+    <fieldset>
+        <legend>Subtitles file:</legend>
+        <div class="line">
+            Upload file: <input type="file" accept=".srt,.vtt" id="subtitle_file_input" autocomplete="off">
+        </div>
+        <div class="line">
+            Or from URL (zip supported): <input type="text" id="subtitle_url_input" autocomplete="off">
+        </div>
+        <div class="line">
+            <button id="subtitle_upload_button">Upload</button> <span id="upload_error_message"></span>
+        </div>
+    </fieldset>
 </div>
 <div class="line">
     Time offset: <input type="number" step="0.01" id="subtitle_offset_input" value="0"> seconds
@@ -75,7 +86,7 @@ button{
     cursor: pointer;
 }
 .line{
-    margin-top: 7px;
+    margin-top: 9px;
 }
 #addsubtitle_menu{
     z-index: 1000000;
@@ -107,7 +118,7 @@ input[type="file"]{
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    widtH: 100%;
+    width: 100%;
 }
 input:not([type="file"]){
     border: 1px solid black;
@@ -139,6 +150,9 @@ input:not([type="file"]){
     border: 1px solid black;
     padding: 5px;
 }
+#upload_error_message{
+    color: red;
+}
 `;
 shadow.appendChild(style);
 
@@ -165,7 +179,8 @@ function update_video_elements_list(){
     var video_elements_list = shadow_root.getElementById("video_elements_list");
     video_elements_list.innerHTML = "";
     if(video_elements.length == 0){
-        video_elements_list.innerHTML = "<div id=\"no_videos\">No video elements found.<br>If your video is inside and iframe, press shift+right click on it then \"This Frame\" > \"Open Frame in New Tab\"</div>"
+        video_elements_list.innerHTML = `<div id=\"no_videos\">No video elements found.<br>
+        If your video is inside and iframe, press shift+right click on it then \"This Frame\" > \"Open Frame in New Tab\"</div>`;
         return;
     }
     for(var i = 0; i < video_elements.length; i++){
@@ -212,6 +227,28 @@ var subtitle_font_size = shadow_root.getElementById("subtitle_font_size").value;
 var subtitle_font_color = shadow_root.getElementById("subtitle_font_color").value;
 var subtitle_background_color = shadow_root.getElementById("subtitle_background_color").value;
 
+function xss(input){
+    input = input.replace(/\&/g, "&amp;");
+    input = input.replace(/\</g, "&lt;");
+    input = input.replace(/\>/g, "&gt;");
+    input = input.replace(/\"/g, "&quot;");
+    input = input.replace(/\'/g, "&#x27;");
+    input = input.replace(/\//g, "&#x2F;");
+    return input;
+}
+
+function allow_tags(input, tags){
+    for(var i = 0; i < tags.length; i++){
+        var regex = new RegExp("&lt;"+tags[i]+"&gt;", "g");
+        input = input.replace(regex, "<"+tags[i]+">");
+        regex = new RegExp("&lt;&#x2F;"+tags[i]+"&gt;", "g");
+        input = input.replace(regex, "</"+tags[i]+">");
+    }
+    return input;
+}
+
+var allowed_html_tags = ["b", "i", "u", "br"]
+
 setInterval(function(){
     if(subtitles.length == 0) return;
     var t = the_video_element.currentTime;
@@ -229,9 +266,12 @@ setInterval(function(){
         subtitle_element.innerHTML = "";
         for(var i = 0; i < subtitles[found].text.length; i++){
             var subtitle_line = document.createElement("div");
-            subtitle_line.innerHTML = subtitles[found].text[i];
+            subtitle_line.innerHTML = allow_tags(xss(subtitles[found].text[i]), allowed_html_tags);
             subtitle_line.className = "subtitle_line";
-            subtitle_line.style.cssText = "font-family: "+subtitle_font+";font-size: "+subtitle_font_size+"px;color:"+subtitle_font_color+";background-color:"+subtitle_background_color+";";
+            subtitle_line.style.cssText = "font-family: "+subtitle_font+
+                ";font-size: "+subtitle_font_size+
+                "px;color:"+subtitle_font_color+
+                ";background-color:"+subtitle_background_color+";";
             subtitle_element.appendChild(subtitle_line);
             subtitle_element.appendChild(document.createElement("br"));
         }
@@ -253,7 +293,9 @@ function get_offset(e){
 function subtitle_pos(){
     var subtitle_height = subtitle_element.getBoundingClientRect().height;
     if(video_fullscreen){
-        var sub_pos_top = the_video_element.getBoundingClientRect().top+the_video_element.offsetHeight+subtitle_offset_top-subtitle_height;
+        var sub_pos_top = the_video_element.getBoundingClientRect().top+
+                        the_video_element.offsetHeight+
+                        subtitle_offset_top-subtitle_height;
         var sub_pos_left = get_offset(the_video_element)[1];
         subtitle_element.style.position = "fixed";
         subtitle_element.style.width = the_video_element.offsetWidth+"px";
@@ -339,15 +381,66 @@ shadow_root.getElementById("refresh_video_list").addEventListener("click", funct
     update_video_elements_list();
 });
 
-shadow_root.getElementById("subtitle_file_input").addEventListener("change", function(){
-    var subtitle_file = this.files[0];
-    var file_reader = new FileReader();
-    file_reader.onload = (function(reader){
-        return function(){
-            parse_subtitles(reader.result);
+shadow_root.getElementById("subtitle_upload_button").addEventListener("click", function(){
+    var subtitle_file_input = shadow_root.getElementById("subtitle_file_input");
+    var subtitle_url_input = shadow_root.getElementById("subtitle_url_input");
+    shadow_root.getElementById("upload_error_message").innerHTML = "";
+    if(subtitle_url_input.value.length > 0){
+        fetch(subtitle_url_input.value, {
+            method: "GET"
+        }).then(response => {
+            if(response.status == 200){
+                return response.blob();
+            }
+            else{
+                throw new Error("Request failed");
+            }
+        }).then((blob) => {
+            if(blob.type == "application/zip"){
+                blob.arrayBuffer().then(buffer => {
+                    var zip = new JSZip();
+                    zip.loadAsync(buffer).then(function(zip){
+                        var files = Object.entries(zip.files);
+                        var subtitle_file = null;
+                        for(var i = 0; i < files.length; i++){
+                            var file = files[i][1];
+                            var filename = file.name;
+                            var extension = filename.split(".");
+                            extension = extension[extension.length-1];
+                            if(extension == "srt" || extension == "vtt"){
+                                subtitle_file = file;
+                                break;
+                            }
+                        }
+                        zip.file(subtitle_file.name).async("string").then(text => {
+                            parse_subtitles(text);
+                        });
+                    });
+                });
+            }
+            else{
+                blob.text().then(text => {
+                    parse_subtitles(text);
+                });
+            }
+        }).catch((error) => {
+            shadow_root.getElementById("upload_error_message").innerHTML = error;
+        });
+    }
+    else{
+        var subtitle_file = subtitle_file_input.files[0];
+        if(subtitle_file == undefined){
+            shadow_root.getElementById("upload_error_message").innerHTML = "No file selected";
         }
-    })(file_reader);
-    file_reader.readAsText(subtitle_file);
+        var file_reader = new FileReader();
+        file_reader.onload = function(event){
+            parse_subtitles(event.target.result);
+        }
+        file_reader.onerror = function(event){
+            shadow_root.getElementById("upload_error_message").innerHTML = event;
+        }
+        file_reader.readAsText(subtitle_file);
+    }
 });
 
 shadow_root.getElementById("subtitle_offset_input").addEventListener("input", function(){

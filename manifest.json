@@ -1,18 +1,19 @@
 {
-	"manifest_version": 2,
-	"name": "Add Subtitles",
-	"version": "1.2",
-	"description": "Add subtitles to a video element.",
+    "manifest_version": 2,
+    "name": "Add Subtitles",
+    "version": "1.3",
+    "description": "Add subtitles to a video element.",
     "homepage_url": "https://github.com/imadr/add-subtitles",
     "icons": {
         "48": "icons/icon-48.png",
         "96": "icons/icon-96.png"
     },
     "permissions": [
-        "activeTab"
+        "activeTab",
+        "<all_urls>"
     ],
     "background": {
-        "scripts": ["background_script.js"]
+        "scripts": ["background_script.js", "zip.js"]
     },
     "browser_action": {
         "default_icon": "icons/icon-32.png",
